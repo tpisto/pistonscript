@@ -1,3 +1,5 @@
+import * as ps from 'features'
+
 let p = require('./node_modules/coffee-script-redux/lib/preprocessor.js')
 let fs = require('fs')
 let PEG = require('pegjs')
@@ -18,10 +20,11 @@ class PistoScript {
 }
 
 let testFile = fs.readFileSync('mysimple.ps')
-let ps = new PistoScript()
-let parsedFile = ps.parse(testFile)
+let compiler = new PistoScript()
+let parsedFile = compiler.parse(testFile)
 
 console.log(parsedFile)
+console.log(parsedFile.compile())
 
 fs.writeFileSync('testout.js', parsedFile);
 

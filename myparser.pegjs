@@ -9,7 +9,7 @@ block =   INDENT s:statements+ DEDENT { return new ps.Block(s) }
         / "{" s:statements+ "}"
 
 statements =    
-                before:word _ fatArrow _? TERM? b: block { return new ps.FatArrow(b) }
+                before:word _ fatArrow _? TERM? b: block { return new ps.FatArrow(b, before) }
               / b:block { return b }
               / w:thinArrow _ { return new ps.ThinArrow(w) }
               / w:word _ { if(typeof w != 'object') { return new ps.Text(w) } else { return w; } }
