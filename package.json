@@ -1,0 +1,19 @@
+{
+  "name": "pistoscript",
+  "version": "0.0.0",
+  "description": "",
+  "main": "babel-options.js",
+  "dependencies": {
+    "coffee-script-redux": "^2.0.0-beta8",
+    "grunt": "^0.4.5",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-traceur": "^0.2.10",
+    "pegjs": "^0.8.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
