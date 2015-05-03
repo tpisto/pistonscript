@@ -1,1 +1,1 @@
-[object Object]
+Class name: Main

@@ -11,34 +11,71 @@
 start
   = s:language* { return new ps.Main(s) }
 
-block =   INDENT s:statement+ DEDENT { return new ps.Block(s) }
-        / "{" s:statement+ "}"
+block = 
+              INDENT s:(statement / term)+ DEDENT { return new ps.Block(s) }
+            / "{" _ s:statement+ _ "}" { return new ps.Block(s) }  
 
-language =   statement 
+language =   
+              statement
             / t:TERM { return new ps.Term(t) } 
 
-statement = 
-                before:word _ fatArrow _? TERM? b: block { return new ps.FatArrow(b, before) }
-              / kw: es6keywords __ s:statement { return new ps.Keyword(s, kw) }              
-              / let:"let"? _ before:word _ '=' _ s:statement { return new ps.SetVariable(s, let, before) } /* Set variable */
-              / w:word _ p:parameter { return new ps.FunctionCall(p, w) }
-              / b:block { return b }
-              / w:thinArrow _ { return new ps.ThinArrow(w) }
-              / w:word _ { if(typeof w != 'object') { return new ps.Text(w) } else { return w; } }
+statement =   
+              // Fat arrow
+                "(" _ p:(s:statement _ ","? { return s })+ _ ")" _ fatArrow _? TERM? b:block TERM? { return new ps.FatArrow(b, p) }
+              
+              // String
+              / string
 
-parameter =  
-              s:statement _ ","? _ p:parameter? { return new ps.Parameter(s, p) }
+              // Import 
+              / "import" _? par1:"{"? _? w:(w:word _ ","? _? { return w })* _? par2:"}"? _ "from" _ l:string _ { return new ps.Import(l, w, par1, par2) }
+              / "import" _? w:word _ "from" _ l:string _ { return new ps.Import(l, new Array(w)) }
+              
+              // Arithmetic
+              / _ s:arithmeticExpression _ { return s }
+              
+              // Just doing nothing for keywords
+              / kw:es6keyword __ s:statement { return new ps.Keyword(s, kw) }              
+              
+              // Variables
+              / let:"let"? _ before:word _ '=' _ s:statement { return new ps.SetVariable(s, let, before) } /* Set variable */
+              
+              // Function
+              / s:word _ p:functionParameter { return new ps.FunctionCall(p, s) }
+              
+              // Thin arrow
+              / w:thinArrow _ { return new ps.ThinArrow(w) }
+              
+              // Something in parentheses
+              / "(" _ s:statement _ ")" { return new ps.Parentheses(s) }
+
+              // Block
+              / b:block { return b }
+              / w:word { if(typeof w != 'object') { return new ps.Text(w) } else { return w; } }
+
+arithmeticExpression =
+              op:es6operator _ s:statement { return new ps.ArithmeticExpression(s, op) }
+
+functionParameter =  
+              s:(!arithmeticExpression s:statement { return s }) _ ","? _ p:functionParameter? { return new ps.Parameter(s, p) }
+
+string = 
+              "'" s:[^'\n]* "'" { return new ps.Text("'"+s.join('')+"'") }
+            / "\"" s:[^"\n]* "\"" { return new ps.Text("\""+s.join('')+"\"") }
 
 word =  
         w:letter+ { return w.join(''); }
 
-letter = words: [^ ,\n\uEFEF\uEFFE\uEFFF] { return words; }
+letter = words:[^ "',(){}\n\uEFEF\uEFFE\uEFFF<>]
+
+term = 
+        t:TERM { return new ps.Term(t) } 
 
 fatArrow = w:"=>" 
 thinArrow = w:"->"
 
-/* Es6 reserved words */
-es6keywords = ( "break" / "do" / "in" / "typeof" / "case" / "else" / "instanceof" / "var" / "catch" / "export" / "new" / "void" / "class" / "extends" / "return" / "while" / "const" / "finally" / "super" / "with" / "continue" / "for" / "switch" / "yield" / "debugger" / "function" / "this" / "default" / "if" / "throw" / "delete" / "import" / "try" / "enum " / "async" / "await" / "implements" / "package" / "protected" / "interface" / "private" / "public" )
+/* ES6 definitions */
+es6operator = ( "+" / "-" / "*" / "/" / "%" / "++" / "--" / "**" )
+es6keyword = ( "break" / "do" / "in" / "typeof" / "case" / "else" / "instanceof" / "var" / "catch" / "export" / "new" / "void" / "class" / "extends" / "return" / "while" / "const" / "finally" / "super" / "with" / "continue" / "for" / "switch" / "yield" / "debugger" / "function" / "this" / "default" / "if" / "throw" / "delete" / "import" / "try" / "enum " / "async" / "await" / "implements" / "package" / "protected" / "interface" / "private" / "public" )
 
 /* From CoffeeRedux */
 
