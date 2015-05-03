@@ -12,17 +12,21 @@ start
   = s:language* { return new ps.Main(s) }
 
 block = 
-              INDENT s:(statement / term)+ DEDENT { return new ps.Block(s) }
+              INDENT s:(statement / term)* DEDENT { return new ps.Block(s) }
             / "{" _ s:statement+ _ "}" { return new ps.Block(s) }  
 
 language =   
-              statement
-            / t:TERM { return new ps.Term(t) } 
+              s:statement {return s }
+            / term
 
 statement =   
-              // Fat arrow
+              // Arrows
                 "(" _ p:(s:statement _ ","? { return s })+ _ ")" _ fatArrow _? TERM? b:block TERM? { return new ps.FatArrow(b, p) }
-              
+              / w:thinArrow _ { return new ps.ThinArrow(w) }
+
+              // For
+              / "for" _ v:variable _ "of" _ s:statement _ TERM? _ b:block { return new ps.For(v, 'of', b, s) }
+
               // String
               / string
 
@@ -34,29 +38,39 @@ statement =
               / _ s:arithmeticExpression _ { return s }
               
               // Just doing nothing for keywords
-              / kw:es6keyword __ s:statement { return new ps.Keyword(s, kw) }              
-              
+              / keyword
+
               // Variables
-              / let:"let"? _ before:word _ '=' _ s:statement { return new ps.SetVariable(s, let, before) } /* Set variable */
+              / variable
+
+              // Function (or class method)
+              / s:word _ p:parameters { return new ps.FunctionCall(p, s) }            
+              / s:word "()" { return new ps.FunctionCall(null, s) }
+              / s:word " " thinArrow { return new ps.FunctionCall(null, s) }
               
-              // Function
-              / s:word _ p:functionParameter { return new ps.FunctionCall(p, s) }
-              
-              // Thin arrow
-              / w:thinArrow _ { return new ps.ThinArrow(w) }
-              
-              // Something in parentheses
+              // Something in parentheses or brackets
               / "(" _ s:statement _ ")" { return new ps.Parentheses(s) }
+              / "[" _ s:parameters _ "]" { return new ps.Brackets(s) }
+              / "[]" { return new ps.Brackets(new ps.Text('')) }
+              / "{}" { return new ps.Braces(new ps.Text('')) }
 
               // Block
               / b:block { return b }
               / w:word { if(typeof w != 'object') { return new ps.Text(w) } else { return w; } }
 
+keyword =              
+              kw:es6keyword __ s:statement { return new ps.Keyword(s, kw) }              
+
+variable = 
+              let:"let"? _ before:word _ '=' _ s:statement { return new ps.SetVariable(s, let, before) } /* Set variable */              
+            / let:"let" _ "[" _ s:parameters _ "]" { return new ps.SetVariable(null, let, s) } /* Set variable */
+            / let:"let" _ s:word { return new ps.SetVariable(null, let, s) } /* Set variable */
+
 arithmeticExpression =
               op:es6operator _ s:statement { return new ps.ArithmeticExpression(s, op) }
 
-functionParameter =  
-              s:(!arithmeticExpression s:statement { return s }) _ ","? _ p:functionParameter? { return new ps.Parameter(s, p) }
+parameters =  
+              s:(!arithmeticExpression !thinArrow s:statement { return s }) _? ","? _? p:parameters? { return new ps.Parameter(s, p) }
 
 string = 
               "'" s:[^'\n]* "'" { return new ps.Text("'"+s.join('')+"'") }
@@ -65,10 +79,10 @@ string =
 word =  
         w:letter+ { return w.join(''); }
 
-letter = words:[^ "',(){}\n\uEFEF\uEFFE\uEFFF<>]
+letter = words:[^ \[\]"',(){}\n\uEFEF\uEFFE\uEFFF<>]
 
 term = 
-        t:TERM { return new ps.Term(t) } 
+        t:TERM _ { return new ps.Term(t) } 
 
 fatArrow = w:"=>" 
 thinArrow = w:"->"
@@ -77,7 +91,11 @@ thinArrow = w:"->"
 es6operator = ( "+" / "-" / "*" / "/" / "%" / "++" / "--" / "**" )
 es6keyword = ( "break" / "do" / "in" / "typeof" / "case" / "else" / "instanceof" / "var" / "catch" / "export" / "new" / "void" / "class" / "extends" / "return" / "while" / "const" / "finally" / "super" / "with" / "continue" / "for" / "switch" / "yield" / "debugger" / "function" / "this" / "default" / "if" / "throw" / "delete" / "import" / "try" / "enum " / "async" / "await" / "implements" / "package" / "protected" / "interface" / "private" / "public" )
 
-/* From CoffeeRedux */
+
+
+/***
+ *  From CoffeeRedux 
+ **/
 
 decimalDigit = [0-9]
 hexDigit = [0-9a-fA-F]

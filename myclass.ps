@@ -16,7 +16,7 @@ export class Welcome
     this.eventAggregator = eventAggregator
     this.subscribe()
   
-  entries(argObj, includeProperties, propertyDefinition) ->
+  entries argObj, includeProperties, propertyDefinition ->
 
     let myArr = []
     for let p of includeProperties

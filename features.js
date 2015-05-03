@@ -1,6 +1,9 @@
 export class Feature {
   
   constructor(features, ...params) {
+
+    console.log("Making: " + this.constructor.name)
+
     this.features = features
     this.params = params
 
@@ -48,10 +51,6 @@ export class Feature {
   afterChildsString() {
     return '';
   }
-
-  toString() {
-    return "Class name: " + this.constructor.name
-  }
 }
 
 export class Main extends Feature {
@@ -67,6 +66,24 @@ export class Term extends Feature {
 export class Text extends Feature {
   afterChildsString() {
     return this.features + ' '
+  }
+}
+
+export class Brackets extends Feature {
+  beforeChildsString() {
+    return '['
+  }
+  afterChildsString() {
+    return ']'
+  }
+}
+
+export class Braces extends Feature {
+  beforeChildsString() {
+    return '{'
+  }
+  afterChildsString() {
+    return '}'
   }
 }
 
@@ -179,6 +196,19 @@ export class FunctionCall extends Feature {
 
 }
 
+export class For extends Feature {
+
+  beforeChildsString() {
+    return 'for ('
+  }
+  afterChildsString() {
+    if(this.params[0] == 'of') {
+      // Compile block and the statement where to get the data from
+      return " of " + this.params[2].compile() + ")\n" + this.params[1].compile()
+    }
+  }
+}
+
 export class Parameter extends Feature {
   
   afterChildsString() {
@@ -186,7 +216,7 @@ export class Parameter extends Feature {
     // !IMPORTANT! Compile sub parameters...
     if(this.params.length > 0) {
       if(this.params[0] != null) {
-        ret += ',' + this.params[0].features.compile()
+        ret += ',' + this.params[0].compile()
       }
     }
     return ret;
@@ -195,15 +225,25 @@ export class Parameter extends Feature {
 
 export class SetVariable extends Feature {
 
-  beforeChildsString() {
-    let ret = ''
+  beforeChildsString() {    
+    let ret = ''    
+    
     // Let
     if(this.params[0]) {
-      ret += this.params[0] + ' '
+      ret += this.params[0] + ' '  
     }
-    // Variable name
-    if(this.params[1]) {
-      ret += this.params[1] + ' = '
+
+    // Variable name (do not create for parameter types)
+    if (this.params[1] instanceof Parameter) {
+      ret += "[" + this.params[1].compile() + "]"
+    }
+    else 
+    {
+      if (this.params[1] && this.features) {
+          ret += this.params[1] + ' = '
+      } else {
+          ret += this.params[1]
+      }
     }
     return ret
   }

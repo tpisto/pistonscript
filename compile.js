@@ -23,8 +23,10 @@ let testFile = fs.readFileSync('mysimple.ps')
 let compiler = new PistoScript()
 let parsedFile = compiler.parse(testFile)
 
-console.log(parsedFile)
-console.log(parsedFile.compile())
+let compiledScript = parsedFile.compile()
 
-fs.writeFileSync('testout.js', parsedFile);
+console.log(parsedFile)
+console.log(compiledScript)
+
+fs.writeFileSync('testout.js', compiledScript);
 
