@@ -22,6 +22,7 @@ language =
 statement =   
               // Arrows
                 "(" _ p:(s:statement _ ","? { return s })+ _ ")" _ fatArrow _? TERM? b:block TERM? { return new ps.FatArrow(b, p) }
+              / p:word _ fatArrow _? TERM? b:block TERM? { return new ps.FatArrow(b, p) }
               / w:thinArrow _ { return new ps.ThinArrow(w) }
 
               // For
@@ -34,6 +35,9 @@ statement =
               / "import" _? par1:"{"? _? w:(w:word _ ","? _? { return w })* _? par2:"}"? _ "from" _ l:string _ { return new ps.Import(l, w, par1, par2) }
               / "import" _? w:word _ "from" _ l:string _ { return new ps.Import(l, new Array(w)) }
               
+              // Comparing
+              / _ s:compareExpression _ { return s }
+
               // Arithmetic
               / _ s:arithmeticExpression _ { return s }
               
@@ -42,6 +46,9 @@ statement =
 
               // Variables
               / variable
+
+              // Object definition with key abc['cde']
+              / jsobject
 
               // Function (or class method)
               / s:word _ p:parameters { return new ps.FunctionCall(p, s) }            
@@ -58,19 +65,28 @@ statement =
               / b:block { return b }
               / w:word { if(typeof w != 'object') { return new ps.Text(w) } else { return w; } }
 
+jsobject = 
+              w:word "[" _ k:(k:word / k:string { return k }) _ "]" { return new ps.JsObject(new ps.Text(w), k) }
+
 keyword =              
-              kw:es6keyword __ s:statement { return new ps.Keyword(s, kw) }              
+              kw:es6keyword __ s:statement { return new ps.Keyword(s, kw) }   
+            / kw:psKeyword __ s:statement { return new ps.Keyword(s, kw) }           
 
 variable = 
-              let:"let"? _ before:word _ '=' _ s:statement { return new ps.SetVariable(s, let, before) } /* Set variable */              
-            / let:"let" _ "[" _ s:parameters _ "]" { return new ps.SetVariable(null, let, s) } /* Set variable */
+              let:"let"? _ w:word _ '=' _ s:statement { return new ps.SetVariable(s, let, new ps.Text(w)) } /* Set variable */              
+            / let:"let" _ "[" _ p:parameters _ "]" _ '=' _ s:statement { return new ps.SetVariable(s, let, p) } /* Set variable */
+            / let:"let" _ "[" _ p:parameters _ "]" { return new ps.SetVariable(null, let, p) } /* Set variable */
             / let:"let" _ s:word { return new ps.SetVariable(null, let, s) } /* Set variable */
+            / j:jsobject _ '=' _ s:statement { return new ps.SetVariable(s, null, j) }
+
+compareExpression =
+              op:es6compare _ s:statement { return new ps.CompareExpression(s, op) }
 
 arithmeticExpression =
               op:es6operator _ s:statement { return new ps.ArithmeticExpression(s, op) }
 
 parameters =  
-              s:(!arithmeticExpression !thinArrow s:statement { return s }) _? ","? _? p:parameters? { return new ps.Parameter(s, p) }
+              s:(!arithmeticExpression !compareExpression !es6keyword !psKeyword !thinArrow s:statement { return s }) _? ","? _? p:parameters? { return new ps.Parameter(s, p) }
 
 string = 
               "'" s:[^'\n]* "'" { return new ps.Text("'"+s.join('')+"'") }
@@ -79,7 +95,7 @@ string =
 word =  
         w:letter+ { return w.join(''); }
 
-letter = words:[^ \[\]"',(){}\n\uEFEF\uEFFE\uEFFF<>]
+letter = words:[^ \[\]"',(){}\n\uEFEF\uEFFE\uEFFF<>=]
 
 term = 
         t:TERM _ { return new ps.Term(t) } 
@@ -87,11 +103,14 @@ term =
 fatArrow = w:"=>" 
 thinArrow = w:"->"
 
+
 /* ES6 definitions */
+es6compare = ( "==" / "!=" / "<=" / ">=" / "<" / ">" )
 es6operator = ( "+" / "-" / "*" / "/" / "%" / "++" / "--" / "**" )
 es6keyword = ( "break" / "do" / "in" / "typeof" / "case" / "else" / "instanceof" / "var" / "catch" / "export" / "new" / "void" / "class" / "extends" / "return" / "while" / "const" / "finally" / "super" / "with" / "continue" / "for" / "switch" / "yield" / "debugger" / "function" / "this" / "default" / "if" / "throw" / "delete" / "import" / "try" / "enum " / "async" / "await" / "implements" / "package" / "protected" / "interface" / "private" / "public" )
 
-
+// PistonScript keywords
+psKeyword = ( "then" )
 
 /***
  *  From CoffeeRedux 

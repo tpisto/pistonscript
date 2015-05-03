@@ -2,7 +2,7 @@ import { inject } from 'aurelia-framework'
 import {EventAggregator} from 'aurelia-event-aggregator'
 import _ from 'lodash'
 
-@inject(EventAggregator)
+@inject EventAggregator
 export class Welcome
 
   heading = 'Welcome to the Aurelia Navigation App!'
@@ -10,7 +10,7 @@ export class Welcome
   lastName = 'Doe'
   areaProperties = []
   
-  constructor(eventAggregator) ->
+  constructor eventAggregator ->
 
     console.log 'welcome'
     this.eventAggregator = eventAggregator
@@ -26,7 +26,7 @@ export class Welcome
       myArr.push(myObj)
     return(myArr)
 
-  subscribe() ->
+  subscribe ->
     
     this.eventAggregator.subscribe 'mapOnPolygon', (myObj) =>    
       let source = _.find myObj.data.sources, x => return x._id == myObj.source._id

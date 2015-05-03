@@ -20,7 +20,7 @@ export class Feature {
   }
 
   compile() {
-    console.log(this.constructor.name)
+    // console.log(this.constructor.name)
     let ret = this.beforeChildsString()
 
     // Has childs  
@@ -65,7 +65,7 @@ export class Term extends Feature {
 
 export class Text extends Feature {
   afterChildsString() {
-    return this.features + ' '
+    return this.features
   }
 }
 
@@ -139,9 +139,15 @@ export class FatArrow extends Feature {
 
     // Get params
     let params = ''
-    this.params[0].forEach(p => {
-      params += p.compile()
-    })
+
+    // This supports one or multiple parameters
+    if (this.params[0] instanceof Parameter) {
+      this.params[0].forEach(p => {
+          params += p.compile()
+      })
+    } else {
+      params = this.params[0]
+    }
 
     if(this.features && this.features.constructor.name == 'Block')  {
       return `(${params}) =>`
@@ -162,6 +168,12 @@ export class ThinArrow extends Feature {
 }
 
 export class ArithmeticExpression extends Feature {
+  beforeChildsString() {
+    return this.params[0] + ' '
+  }
+}
+
+export class CompareExpression extends Feature {
   beforeChildsString() {
     return this.params[0] + ' '
   }
@@ -191,9 +203,15 @@ export class FunctionCall extends Feature {
   }
 
   afterChildsString() {
-    return ")"
+    return ") "
   }
 
+}
+
+export class JsObject extends Feature {
+  afterChildsString() {
+    return "[" + this.params[0].compile() + "]"
+  }
 }
 
 export class For extends Feature {
@@ -236,11 +254,15 @@ export class SetVariable extends Feature {
     // Variable name (do not create for parameter types)
     if (this.params[1] instanceof Parameter) {
       ret += "[" + this.params[1].compile() + "]"
-    }
+      if(this.features) {
+        ret += ' = '
+      }
+    }    
     else 
     {
+      console.log(this.params)
       if (this.params[1] && this.features) {
-          ret += this.params[1] + ' = '
+          ret += this.params[1].compile() + ' = '
       } else {
           ret += this.params[1]
       }
@@ -248,4 +270,3 @@ export class SetVariable extends Feature {
     return ret
   }
 }
-
