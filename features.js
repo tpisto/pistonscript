@@ -45,7 +45,6 @@ export class Term extends Feature {
 }
 
 export class Text extends Feature {
-  
   afterChildsString() {
     return this.features + ' '
   }
@@ -80,5 +79,62 @@ export class FatArrow extends Feature {
 }
 
 export class ThinArrow extends Feature {
+}
+
+export class Keyword extends Feature {
+
+  beforeChildsString() {
+    let ret = ''
+    // Keyword
+    if(this.params[0]) {
+      ret += this.params[0] + ' '
+    }
+    return ret
+  }
+}
+
+export class FunctionCall extends Feature {
+
+  beforeChildsString() {
+    let ret = ''
+    // Function
+    if(this.params[0]) {
+      ret += this.params[0] + '('
+    }
+    return ret
+  }
+
+  afterChildsString() {
+    return ")"
+  }
+
+}
+
+export class Parameter extends Feature {
+  
+  afterChildsString() {
+    let ret = ''
+    // !IMPORTANT! Compile sub parameters...
+    if(this.params.length > 0) {
+      ret += ',' + this.params[0].features.compile()
+    }
+    return ret;
+  }
+}
+
+export class SetVariable extends Feature {
+
+  beforeChildsString() {
+    let ret = ''
+    // Let
+    if(this.params[0]) {
+      ret += this.params[0] + ' '
+    }
+    // Variable name
+    if(this.params[1]) {
+      ret += this.params[1] + ' = '
+    }
+    return ret
+  }
 }
 

@@ -2,28 +2,45 @@
   ps = require('features.js')
 }
 
+/* 
+ *  PistonScript defintion
+ *  Simple indent based ES6 language for the programmers who doesn't want to spend their life to counting parentheses
+ *  but want to focus on productivity 
+ */
+
 start
-  = s:statements* { return new ps.Main(s) }
+  = s:language* { return new ps.Main(s) }
 
-block =   INDENT s:statements+ DEDENT { return new ps.Block(s) }
-        / "{" s:statements+ "}"
+block =   INDENT s:statement+ DEDENT { return new ps.Block(s) }
+        / "{" s:statement+ "}"
 
-statements =    
+language =   statement 
+            / t:TERM { return new ps.Term(t) } 
+
+statement = 
                 before:word _ fatArrow _? TERM? b: block { return new ps.FatArrow(b, before) }
+              / kw: es6keywords __ s:statement { return new ps.Keyword(s, kw) }              
+              / let:"let"? _ before:word _ '=' _ s:statement { return new ps.SetVariable(s, let, before) } /* Set variable */
+              / w:word _ p:parameter { return new ps.FunctionCall(p, w) }
               / b:block { return b }
               / w:thinArrow _ { return new ps.ThinArrow(w) }
               / w:word _ { if(typeof w != 'object') { return new ps.Text(w) } else { return w; } }
 
+parameter =  
+              s:statement _ ","? _ p:parameter? { return new ps.Parameter(s, p) }
+
 word =  
         w:letter+ { return w.join(''); }
-      / w:TERM { return new ps.Term() }
 
-letter = words: [^ \n\uEFEF\uEFFE\uEFFF] { return words; }
+letter = words: [^ ,\n\uEFEF\uEFFE\uEFFF] { return words; }
 
 fatArrow = w:"=>" 
 thinArrow = w:"->"
 
-/* Some detection stuff from CoffeeRedux */
+/* Es6 reserved words */
+es6keywords = ( "break" / "do" / "in" / "typeof" / "case" / "else" / "instanceof" / "var" / "catch" / "export" / "new" / "void" / "class" / "extends" / "return" / "while" / "const" / "finally" / "super" / "with" / "continue" / "for" / "switch" / "yield" / "debugger" / "function" / "this" / "default" / "if" / "throw" / "delete" / "import" / "try" / "enum " / "async" / "await" / "implements" / "package" / "protected" / "interface" / "private" / "public" )
+
+/* From CoffeeRedux */
 
 decimalDigit = [0-9]
 hexDigit = [0-9a-fA-F]
