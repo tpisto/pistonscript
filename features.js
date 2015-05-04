@@ -197,15 +197,23 @@ export class FunctionCall extends Feature {
     let ret = ''
     // Function
     if(this.params[0]) {
-      ret += this.params[0] + "("
+      ret += this.params[0].compile()
+      // Do not add parentheses if inside parameters
+      if(!(this.parent instanceof Parameter)) {
+        ret += "("
+      }
     }
     return ret
   }
 
   afterChildsString() {
-    return ") "
+    let ret = ''
+    
+    if(!(this.parent instanceof Parameter)) {
+      ret += ")"
+    }  
+    return ret
   }
-
 }
 
 export class JsObject extends Feature {

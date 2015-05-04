@@ -51,9 +51,9 @@ statement =
               / jsobject
 
               // Function (or class method)
-              / s:word _ p:parameters { return new ps.FunctionCall(p, s) }            
-              / s:word "()" { return new ps.FunctionCall(null, s) }
-              / s:word " " thinArrow { return new ps.FunctionCall(null, s) }
+              / s:word _ p:parameters { return new ps.FunctionCall(p, new ps.Text(s)) }            
+              / s:word "()" { return new ps.FunctionCall(null, new ps.Text(s)) }
+              / s:word " " thinArrow { return new ps.FunctionCall(null, new ps.Text(s)) }   // !Todo! The last class method argument is also recognized as function, now it's just handled at rendering
               
               // Something in parentheses or brackets
               / "(" _ s:statement _ ")" { return new ps.Parentheses(s) }
@@ -86,7 +86,7 @@ arithmeticExpression =
               op:es6operator _ s:statement { return new ps.ArithmeticExpression(s, op) }
 
 parameters =  
-              s:(!arithmeticExpression !compareExpression !es6keyword !psKeyword !thinArrow s:statement { return s }) _? ","? _? p:parameters? { return new ps.Parameter(s, p) }
+              s:(!arithmeticExpression !compareExpression !(es6keyword noChars) !(psKeyword noChars) !thinArrow s:statement { return s }) _? ","? _? p:parameters? { return new ps.Parameter(s, p) }
 
 string = 
               "'" s:[^'\n]* "'" { return new ps.Text("'"+s.join('')+"'") }
@@ -96,6 +96,8 @@ word =
         w:letter+ { return w.join(''); }
 
 letter = words:[^ \[\]"',(){}\n\uEFEF\uEFFE\uEFFF<>=]
+
+noChars = [ \[\]"',(){}\n\uEFEF\uEFFE\uEFFF<>=]
 
 term = 
         t:TERM _ { return new ps.Term(t) } 

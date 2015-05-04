@@ -1,1 +1,2 @@
-let myArr = []
+entries(arg,intia,moikkuli,moi)
+ { let a = b } 
