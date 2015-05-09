@@ -1,8 +1,9 @@
-import * as ps from 'features'
+import * as ps from 'ast'
 
 let p = require('./node_modules/coffee-script-redux/lib/preprocessor.js')
 let fs = require('fs')
 let PEG = require('pegjs')
+let escodegen = require('lib/escodegen/escodegen')
 
 class PistoScript {
   
@@ -14,8 +15,8 @@ class PistoScript {
   parse(file) {
     this.preProcessedFile = p.Preprocessor.process(file)
     this.parsed = this.parser.parse(this.preProcessedFile)
-    this.features = this.parsed
-    return this.features
+    this.ast = this.parsed
+    return this.ast
   }
 }
 
@@ -25,8 +26,10 @@ let parsedFile = compiler.parse(testFile)
 
 let compiledScript = parsedFile.compile()
 
-console.log(parsedFile)
-console.log(compiledScript)
+// console.log(parsedFile)
+// console.log(compiledScript)
+
+console.log(escodegen.generate(parsedFile))
 
 fs.writeFileSync('testout.js', compiledScript);
 
