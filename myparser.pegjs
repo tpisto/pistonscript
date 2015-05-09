@@ -28,6 +28,10 @@ statement =
               // For
               / "for" _ v:variable _ "of" _ s:statement _ TERM? _ b:block { return new ps.For(v, 'of', b, s) }
 
+              // If
+              / "if" _ s1:statement _ c:compareExpression _ TERM? _ b:block { return new ps.If(s1, c, b) }
+              / "if" _ s1:statement _ c:compareExpression _ "then" _ s:statement+ { return new ps.If(s1, c, new ps.MultipleStatements(s)) }
+
               // String
               / string
 
@@ -66,7 +70,7 @@ statement =
               / w:word { if(typeof w != 'object') { return new ps.Text(w) } else { return w; } }
 
 jsobject = 
-              w:word "[" _ k:(k:word / k:string { return k }) _ "]" { return new ps.JsObject(new ps.Text(w), k) }
+              w:word "[" _ k:(w:word { return new ps.Text(w); } / s:string ) _ "]" { return new ps.JsObject(new ps.Text(w), k) }
 
 keyword =              
               kw:es6keyword __ s:statement { return new ps.Keyword(s, kw) }   

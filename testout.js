@@ -1,2 +1,1 @@
-entries(arg,intia,moikkuli,moi)
- { let a = b } 
+if (a== b) {if (c== g) {a = 10}}

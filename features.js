@@ -56,6 +56,9 @@ export class Feature {
 export class Main extends Feature {
 }
 
+export class MultipleStatements extends Feature {
+}
+
 export class Term extends Feature {
   
   afterChildsString() {
@@ -227,10 +230,27 @@ export class For extends Feature {
   beforeChildsString() {
     return 'for ('
   }
+
   afterChildsString() {
     if(this.params[0] == 'of') {
       // Compile block and the statement where to get the data from
       return " of " + this.params[2].compile() + ")\n" + this.params[1].compile()
+    }
+  }
+}
+
+export class If extends Feature {
+
+  beforeChildsString() {
+    return 'if ('
+  }
+
+  afterChildsString() {
+    if(this.params[1] instanceof Block) {
+      return this.params[0].compile() + ')' + this.params[1].compile()
+    } 
+    else {
+      return this.params[0].compile() + ') {' + this.params[1].compile() + '}'
     }
   }
 }
@@ -268,7 +288,6 @@ export class SetVariable extends Feature {
     }    
     else 
     {
-      console.log(this.params)
       if (this.params[1] && this.features) {
           ret += this.params[1].compile() + ' = '
       } else {
