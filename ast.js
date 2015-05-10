@@ -2,7 +2,12 @@ export class Node {
   
   constructor(p) {
     console.log(this.constructor.name + "\n")
-    Object.assign(this, p);
+
+    // Make parameters into own properties
+    if(p!=null) { 
+      Object.assign(this, p); 
+    }
+
     this.type = this.constructor.name
   }
 
@@ -35,12 +40,16 @@ export class Node {
 
 export class Program extends Node {
   constructor(p) {
-    super({})
+    super()
     this.body = this.optionalList(p.body)
   }
 }
 
 export class BlockStatement extends Node {
+  constructor(p) {
+    super()
+    this.body = this.optionalList(this.extractOptional(p.body, 0))
+  }
 }
 
 export class VariableDeclaration extends Node {

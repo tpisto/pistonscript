@@ -123,7 +123,7 @@ MultiLineCommentNoLineTerminator
   = "/*" (!("*/" / LineTerminator) SourceCharacter)* "*/"
 
 SingleLineComment
-  = "//" (!LineTerminator SourceCharacter)*
+  = "#" (!LineTerminator SourceCharacter)*
 
 Identifier
   = !ReservedWord name:IdentifierName { return name; }
@@ -990,19 +990,7 @@ Statement
   / DebuggerStatement
 
 Block
-  = "{" __ body:(StatementList __)? "}" {
-      return {
-        type: "BlockStatement",
-        body: optionalList(extractOptional(body, 0))
-      };
-    }
-  / INDENT __ body:(StatementList __)? DEDENT {
-      console.log('INDENTNOW')
-      return {
-        type: "BlockStatement",
-        body: optionalList(extractOptional(body, 0))
-      };
-    }
+  = ("{"/INDENT) __ body:(StatementList __)? ("}"/DEDENT) { return new ps.BlockStatement({body: body}) }
 
 StatementList
   = first:Statement rest:(__ Statement)* { return buildList(first, rest, 1); }
@@ -1056,7 +1044,7 @@ ExpressionStatement
     }
 
 IfStatement
-  = IfToken __ "(" __ test:Expression __ ")" __
+  = IfToken __ "("? __ test:Expression _ (")"/"then"/LineTerminatorSequence) __
     consequent:Statement __
     ElseToken __
     alternate:Statement
@@ -1068,7 +1056,7 @@ IfStatement
         alternate:  alternate
       };
     }
-  / IfToken __ "(" __ test:Expression __ ")" __
+  / IfToken __ "("? __ test:Expression _ (")"/"then"/LineTerminatorSequence) __
     consequent:Statement {
       return {
         type:       "IfStatement",

@@ -14,6 +14,7 @@ class PistoScript {
   
   parse(file) {
     this.preProcessedFile = p.Preprocessor.process(file)
+    console.log(this.preProcessedFile)
     this.parsed = this.parser.parse(this.preProcessedFile)
     this.ast = this.parsed
     return this.ast
@@ -26,9 +27,7 @@ let parsedFile = compiler.parse(testFile)
 
 let compiledScript = parsedFile.compile()
 
-// console.log(parsedFile)
 console.log(JSON.stringify(compiledScript, null, '\t'))
-
 console.log(escodegen.generate(parsedFile))
 
 fs.writeFileSync('testout.js', compiledScript);
