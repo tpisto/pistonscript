@@ -27,7 +27,7 @@ let parsedFile = compiler.parse(testFile)
 let compiledScript = parsedFile.compile()
 
 // console.log(parsedFile)
-// console.log(compiledScript)
+console.log(JSON.stringify(compiledScript, null, '\t'))
 
 console.log(escodegen.generate(parsedFile))
 

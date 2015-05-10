@@ -6,6 +6,28 @@ export class Node {
     this.type = this.constructor.name
   }
 
+  extractOptional(optional, index) {
+    return optional ? optional[index] : null;
+  }
+
+  extractList(list, index) {
+    var result = new Array(list.length), i;
+
+    for (i = 0; i < list.length; i++) {
+      result[i] = list[i][index];
+    }
+
+    return result;
+  }
+
+  buildList(first, rest, index) {
+    return [first].concat(extractList(rest, index));
+  }
+
+  optionalList(value) {
+    return value !== null ? value : [];
+  }
+
   compile() {
     return this;
   }
@@ -14,25 +36,14 @@ export class Node {
 export class Program extends Node {
   constructor(p) {
     super({})
-    
-    let bodyArr = []
-    bodyArr.push(p.first)
-    bodyArr.concat(p.rest)
-    this.body = bodyArr
-  }  
+    this.body = this.optionalList(p.body)
+  }
 }
 
 export class BlockStatement extends Node {
-  constructor(p) {
-    super({})
-    
-    if(p != null) {
-      this.body = p.first.concat(p.rest)
-    }
-    else {
-      this.body = []
-    }
-  }  
+}
+
+export class VariableDeclaration extends Node {
 }
 
 export class Literal extends Node {
