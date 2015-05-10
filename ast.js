@@ -38,6 +38,12 @@ export class Node {
   }
 }
 
+/**
+* This is the description for my class.
+*
+* @class Program
+* @constructor
+*/
 export class Program extends Node {
   constructor(p) {
     super()
@@ -45,6 +51,12 @@ export class Program extends Node {
   }
 }
 
+/**
+* Block statement works with curly brackets or indented.
+*
+* @class BlockStatement
+* @constructor
+*/
 export class BlockStatement extends Node {
   constructor(p) {
     super()
@@ -52,9 +64,66 @@ export class BlockStatement extends Node {
   }
 }
 
+/**
+* Variable could be declared using let, var, const
+*
+* @class VariableDeclaration
+* @constructor
+*/
 export class VariableDeclaration extends Node {
 }
 
+/**
+* Literal
+*
+* @class Literal
+* @constructor
+*/
 export class Literal extends Node {
 }
 
+/**
+* if ... then ... else ...
+*
+* @class IfStatement
+* @constructor
+*/
+export class IfStatement extends Node {
+}
+
+/**
+* Expression
+*
+* @class ExpressionStatement
+* @constructor
+*/
+export class ExpressionStatement extends Node {
+}
+
+export class Expression extends Node {
+  constructor(p) {
+    super()
+    if(p.rest.length > 0) {
+      this.type =  "SequenceExpression"
+      this.expressions = buildList(p.first, p.rest, 3)
+    } else {
+      console.log('JEEE')
+      console.log(p)
+      Object.assign(this, p.first);       
+    }
+  }
+}
+
+export class AssignmentExpression extends Node {
+  constructor(p) {
+    super(p)
+    console.log('wERJWELKRWEJLKRWEJRJWELRJWELKR')
+  }
+}
+
+export class CallExpression extends Node {
+  constructor(p) {
+    super(p)
+    console.log('wERJWELKRWEJLKRWEJRJWELRJWELKR')
+  }
+}

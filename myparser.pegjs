@@ -644,12 +644,10 @@ NewExpression
 
 CallExpression
   = first:(
-      callee:MemberExpression __ args:Arguments {
-        return { type: "CallExpression", callee: callee, arguments: args };
-      }
+      callee:MemberExpression args:Arguments { return new ps.CallExpression( { callee:callee, arguments:args } ) }
     )
     rest:(
-        __ args:Arguments {
+        args:Arguments {
           return { type: "CallExpression", arguments: args };
         }
       / __ "[" __ property:Expression __ "]" {
@@ -676,7 +674,7 @@ CallExpression
     }
 
 Arguments
-  = "(" __ args:(ArgumentList __)? ")" {
+  = (_/"(") args:(ArgumentList __) (_/")") {
       return optionalList(extractOptional(args, 0));
     }
 
@@ -898,23 +896,13 @@ AssignmentExpression
     "=" !"=" __
     right:AssignmentExpression
     {
-      return {
-        type:     "AssignmentExpression",
-        operator: "=",
-        left:     left,
-        right:    right
-      };
+      return new ps.AssignmentExpression( { operator:"=", left:left, right:right } )
     }
   / left:LeftHandSideExpression __
     operator:AssignmentOperator __
     right:AssignmentExpression
     {
-      return {
-        type:     "AssignmentExpression",
-        operator: operator,
-        left:     left,
-        right:    right
-      };
+      return new ps.AssignmentExpression( { operator:operator, left:left, right:right } )
     }
   / ConditionalExpression
 
@@ -957,14 +945,11 @@ AssignmentOperator
   / "|="
 
 Expression
-  = first:AssignmentExpression rest:(__ "," __ AssignmentExpression)* {
-      return rest.length > 0
-        ? { type: "SequenceExpression", expressions: buildList(first, rest, 3) }
-        : first;
-    }
+  = first:AssignmentExpression rest:(__ "," __ AssignmentExpression)* { return new ps.Expression( { first:first, rest: rest } ) }
 
 ExpressionNoIn
   = first:AssignmentExpressionNoIn rest:(__ "," __ AssignmentExpressionNoIn)* {
+      console.log('NO IN!!!')
       return rest.length > 0
         ? { type: "SequenceExpression", expressions: buildList(first, rest, 3) }
         : first;
@@ -996,7 +981,7 @@ StatementList
   = first:Statement rest:(__ Statement)* { return buildList(first, rest, 1); }
 
 VariableStatement
-  = v:VarToken __ declarations:VariableDeclarationList EOS { return new ps.VariableDeclaration({ kind: v, declarations: declarations } ) }
+  = v:VarToken __ declarations:VariableDeclarationList { return new ps.VariableDeclaration({ kind: v, declarations: declarations } ) }
 
 VariableDeclarationList
   = first:VariableDeclaration rest:(__ "," __ VariableDeclaration)* {
@@ -1009,7 +994,7 @@ VariableDeclarationListNoIn
     }
 
 VariableDeclaration
-  = id:Identifier init:(__ Initialiser)? {
+  = id:Identifier init:(__ Initialiser)? {console.log(init);
       return {
         type: "VariableDeclarator",
         id:   id,
@@ -1018,7 +1003,7 @@ VariableDeclaration
     }
 
 VariableDeclarationNoIn
-  = id:Identifier init:(__ InitialiserNoIn)? {
+  = id:Identifier init:(__ InitialiserNoIn)? { 
       return {
         type: "VariableDeclarator",
         id:   id,
@@ -1036,12 +1021,7 @@ EmptyStatement
   = ";" { return { type: "EmptyStatement" }; }
 
 ExpressionStatement
-  = !("{" / FunctionToken) expression:Expression EOS {
-      return {
-        type:       "ExpressionStatement",
-        expression: expression
-      };
-    }
+  = !("{" / FunctionToken) expression:Expression EOS { return new ps.ExpressionStatement({ expression: expression }) };
 
 IfStatement
   = IfToken __ "("? __ test:Expression _ (")"/"then"/LineTerminatorSequence) __
@@ -1049,21 +1029,13 @@ IfStatement
     ElseToken __
     alternate:Statement
     {
-      return {
-        type:       "IfStatement",
-        test:       test,
-        consequent: consequent,
-        alternate:  alternate
-      };
+      console.log('we are here')
+      return new ps.IfStatement( {test: test, consequent: consequent, alternate: alternate } );
     }
   / IfToken __ "("? __ test:Expression _ (")"/"then"/LineTerminatorSequence) __
-    consequent:Statement {
-      return {
-        type:       "IfStatement",
-        test:       test,
-        consequent: consequent,
-        alternate:  null
-      };
+    consequent:Statement 
+    {
+      return new ps.IfStatement( {test: test, consequent: consequent, alternate: null } );
     }
 
 IterationStatement
